@@ -1,5 +1,6 @@
 #!/usr/bin/php
 <?php
+require_once("src/action.inc");
 require_once("src/transaction.inc");
 
 if(count($argv) != 3) {
@@ -19,9 +20,16 @@ try {
 //	$transactions = $transactionObj->processTransaction($blockNum);
 //sleep(20);
 	$actions = $eosioChain->getActions($blockNum);
+	$actionObj = new Action($eosioChain);
 	foreach($actions as $action) {
 		if(array_key_exists('account', $action)) {
 			if(preg_match("/^edna/", $action['account'])) {
+				switch($action['name']) {
+					case 'teleport':
+						$actionObj->processTeleport($action);
+						break;
+				}
+				print_r($action);
 				file_put_contents("action_".$action['account'].".log", $blockNum . ":" . json_encode($action), FILE_APPEND);
 			}
 		}
@@ -65,7 +73,7 @@ print_r($action);
 							$toAccountName = $action['data']['address_to'];
 							$eosio = new EosioChain($targetChainName);
 							$command = $eosio->buildCommandWithWallet('push action ednazztokens '.$receiveAction.' {"name":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"}');
-							
+
 							if($eosio->checkAndUnlockWallet()) {
 								$result = $eosio->runCommand($command, false);
 								$issueTransId = EosioChain::parseTransactionId($result);

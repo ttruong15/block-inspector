@@ -25,7 +25,6 @@ class EosioChain {
 		}
         $this->currentChain = $currentChain;
 		$this->getConfigOptions();
-		$this->getEnableChains();
     }
 
     public static function parseTransactionId($data) {
