@@ -33,5 +33,7 @@ try {
 		}
 	}
 } catch(Exception $e) {
-	$telegram->sendMessage(array('text'=>$e->getMessage()));
+	$message = date("jS F H:i:s e") . "\n\n";
+	$message .= $e->getMessage();
+	$telegram->sendMessage(array('text'=>$message));
 }
