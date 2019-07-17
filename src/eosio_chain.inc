@@ -265,8 +265,8 @@ class EosioChain {
 		if($redirectErrorMessage) {
 			$command .= " 2>&1";
 		}
-
-echo $command . "\n";
+// TODO
+$this->log($command);
         ob_start();
         @system($command, $retval);
         $resultString = ob_get_contents();

@@ -28,7 +28,7 @@ try {
 						$actionObj->processTeleport($action);
 						break;
 				}
-				file_put_contents("action_".$chainName.".log", $blockNum . ":" . json_encode($action)."\n", FILE_APPEND);
+				file_put_contents("action_".$chain.".log", $blockNum . ":" . json_encode($action)."\n", FILE_APPEND);
 			}
 		}
 	}

@@ -40,11 +40,13 @@ class Action  {
 					$error .= $result . "\n";
 				}
 				$error .= json_encode($action['data']);
+				$targetChainObj->log($error);
 				throw new Exception($error);
 			} else {
 				$targetChainObj->log("Issue successfully with transaction id: " . $issueTransId);
 			}
 		} else {
+			$this->currentChain->log("Error: unable to unlock '$targetChainName' wallet");
 			throw new Exception("Error: unable to unlock '$targetChainName' wallet");
 		}
 	}
@@ -58,6 +60,7 @@ class Action  {
 			case 3:
 				return "worbli";
 			default:
+				$this->currentChain->log("chain '$targetChain' not supported");
 				throw new Exception("chain '$targetChain' not supported");
 		}
 	}
