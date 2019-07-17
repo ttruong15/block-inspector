@@ -11,10 +11,9 @@ $lastCheckStat = getLastStatCheck();
 if(is_array($lastCheckStat) && count($lastCheckStat)) {
 	foreach($availableChains as $chainName) {
 		if($lastCheckStat[$chainName] == $currentStat[$chainName]) {
-			$duration = number_format(((time() - $lastCheckStat[$chainName])/60), 2);
 			$message = date("jS F H:i:s e") . "\n\n";
 			$message .= "<b>".$chainName."</b>\n";
-			$message .= "<b>Last processed:</b> " . $duration . " minutes ago\n";
+			$message .= "<b>Last processed:</b> " . calculateTime($lastCheckStat[$chainName]) . " ago\n";
 
 			$data = array();
 			$data['text'] = $message;
@@ -58,4 +57,14 @@ function getLastStatCheck() {
 	}
 
 	return array();
+}
+
+function calculateTime($lastCheckTimer) {
+	$duration = time() - $lastCheckTimer;
+
+	$hours = floor($duration / 3600);
+	$minutes = floor(($duration / 60) % 60);
+	$seconds = $duration % 60;
+
+	return $hours.":".$minutes.":".$seconds;
 }
