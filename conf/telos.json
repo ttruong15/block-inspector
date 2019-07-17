@@ -4,5 +4,5 @@
     "wallet-name": "default",
     "wallet-password": "",
     "file-log-size-limit": "100",
-    "enable-chain": ["eos"]
+    "enable-chain": ["eos","worbli"]
 }

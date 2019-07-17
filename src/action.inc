@@ -28,19 +28,24 @@ class Action  {
 		$quantity = $action['data']['quantity'];
 		$memo = $action['data']['memo'];
 		$toAccountName = $action['data']['address_to'];
-		$command = $targetChainObj->buildCommandWithWallet('push action ednazztokens recvteleport \'{"from":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"} -p ednazzscotty\'');
+		$command = $targetChainObj->buildCommandWithWallet('push action ednazztokens recvteleport \'{"from":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"}\' -p ednazzscotty');
 		if($targetChainObj->checkAndUnlockWallet()) {
 			$result = $targetChainObj->runCommand($command, false);
 			$issueTransId = EosioChain::parseTransactionId($result);
 			if(!$issueTransId) {
-				echo "Issue failed: " . json_encode($action['data']);
-				print_r($result);
+				$error = "Issue action failed: ";
+				if(is_array($result)) {
+					$error .= json_encode($result) . "\n";
+				} else {
+					$error .= $result . "\n";
+				}
+				$error .= json_encode($action['data']);
+				throw new Exception($error);
 			} else {
-				echo "Issue successfully with transaction id: " . $issueTransId . "\n";
+				$targetChainObj->log("Issue successfully with transaction id: " . $issueTransId);
 			}
 		} else {
-			echo "Error: unable to unlock '$targetChainName' wallet\n";
-			// Log error
+			throw new Exception("Error: unable to unlock '$targetChainName' wallet");
 		}
 	}
 

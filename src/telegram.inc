@@ -69,6 +69,10 @@ class Telegram {
     }
 
     public function sendMessage(array $data) {
+		if(!array_key_exists('text', $data)) {
+			throw new Exception("message is empty.");
+		}
+
 		if(!array_key_exists('chat_id', $data)) {
 			$data['chat_id'] = $this->channelName;
 		}
@@ -155,11 +159,11 @@ class Telegram {
     }
 
     private function readConfig() {
-        if(!file_exists("telegram.json")) {
-            throw new Exception("telegram.json is not available");
+        if(!file_exists("conf/telegram.json")) {
+            throw new Exception("conf/telegram.json is not available");
         }
 
-        $config = json_decode(file_get_contents("telegram.json"), true);
+        $config = json_decode(file_get_contents("conf/telegram.json"), true);
         if(json_last_error()) {
             throw new Exception("ERROR: reading telegram.json - " . json_last_error_msg());
         }
@@ -169,7 +173,7 @@ class Telegram {
         $this->channelName = $config['channel_name'];
         $this->curlTimeout = $config['request-timeout'];
 
-        if(empty($this->botKey) || empty($this->botChatId)) {
+        if(empty($this->botKey) || (empty($this->botChatId) && empty($this->channelName))) {
             throw new Exception("telegram bot is enabled, you must provide botkey and botchatid.");
         }
     }
