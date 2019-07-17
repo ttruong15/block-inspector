@@ -3,15 +3,18 @@ require_once("src/eosio_chain.inc");
 require_once("src/telegram.inc");
 
 if(count($argv) < 2) {
-    echo "Usage: php {$argv[0]} <chain_name(eos|telos)> <turn_on_telegram_bot(0/1)\n";
+    echo "Usage: php {$argv[0]} <chain_name(eos|telos|worbli)>\n";
     echo "\n";
     echo "Example:\n";
     echo "\n";
-    echo "\t Running EOS chain without telegram bot\n";
-    echo "\t php {$argv[0]} eos 0\n";
+    echo "\t Running EOS chain\n";
+    echo "\t php {$argv[0]} eos\n";
     echo "\n";
-    echo "\t Running EOS chain and turn on telegram bot\n";
-    echo "\t php {$argv[0]} eos 1\n";
+    echo "\t Running TELOS chain\n";
+    echo "\t php {$argv[0]} telos\n";
+    echo "\n";
+    echo "\t Running WORBLI chain\n";
+    echo "\t php {$argv[0]} worbli\n";
     echo "\n";
     exit;
 }
@@ -30,25 +33,18 @@ class RunProcessBlocks {
 
 	private $numSpawn = array();
 	private $logFilename = null;
-	private $lastNotify = null;
-	private $enableTelegramBot = false;
 	private $chainName = null;
-	private $telegram = null;
+	private $processingBlock = array();
 
-	public function __construct($chainName, $enableTelegramBot) {
+	public function __construct($chainName) {
 		$this->chainName = $chainName;
 		$this->logFilename = "logs/".$this->chainName."_process_block.log";
 		$this->currentBlockFile = "logs/".$this->chainName."_current_blockheight.log";
-		$this->enableTelegramBot = $enableTelegramBot;
-		if($this->enableTelegramBot) {
-			$this->telegram = new Telegram();
-		}
 	}
 
 	public function run() {
 		try {
 			$eosio = new EosioChain($this->chainName);
-			$lastBlocknumNotifyTelegram = "logs/last_block_update_telegram_".$this->chainName;
 			$currentHeadBlockHeight = $eosio->getLastIrreversibleBlockNum();
 			$currentBlockHeight = 0;
 			while(true) {
@@ -60,21 +56,25 @@ class RunProcessBlocks {
 				// allow max number process to spawn
 				try {
 					if(!$currentBlockHeight && file_exists($this->currentBlockFile)) {
-						$currentBlockHeight = trim(file_get_contents($this->currentBlockFile));
+						$currentBlockHeights = json_decode(file_get_contents($this->currentBlockFile), true);
+						foreach($currentBlockHeights as $currentBlockHeight=>$lastRun) {}
+						if(!$currentBlockHeight) {
+							$currentBlockHeight = $currentHeadBlockHeight;
+						}
 					} else if(!$currentBlockHeight) {
 						// if no current blockheight, then start at the latest head block
 						$currentBlockHeight = $currentHeadBlockHeight;
 					}
 
 					if(count($this->numSpawn) <= self::MAX_SPAWN) {
-						$this->notifyTelegramBot($lastBlocknumNotifyTelegram, $currentBlockHeight, $currentHeadBlockHeight);
-
 						if($currentBlockHeight < $currentHeadBlockHeight) {
 							// log block start processing
 							$command = "/usr/bin/nohup ./process_block.php {$this->chainName} $currentBlockHeight >> {$this->logFilename} 2>&1 & echo $!";
 							$childPid = exec($command);
 							$this->numSpawn[$childPid] = array('start_timer'=>microtime(true), 'blocknum'=>$currentBlockHeight);
-							file_put_contents($this->currentBlockFile, ++$currentBlockHeight);
+							$currentBlockHeight += 1;
+							$this->processingBlock[$currentBlockHeight] = time();
+							file_put_contents($this->currentBlockFile, json_encode($this->processingBlock));
 						} else {
 							$currentHeadBlockHeight = $eosio->getLastIrreversibleBlockNum();
 							echo "H";
@@ -108,6 +108,7 @@ class RunProcessBlocks {
 			$dirExist = is_dir("/proc/$pid/fd") && file_exists("/proc/$pid/fd");
 			if(!$dirExist) {
 				echo date("Y-m-d H:i:s") . " - " . $details['blocknum'] . " processed\n";
+				unset($this->processingBlock[$details['blocknum']]);
 				unset($this->numSpawn[$pid]);
 			}
 		}
@@ -125,33 +126,13 @@ class RunProcessBlocks {
 					$command = "/usr/bin/nohup ./process_block.php.php {$this->chainName} ".$job['blocknum']." >> {$this->logFilename} 2>&1 & echo $!";
 					$childPid = exec($command);
 					$this->numSpawn[$childPid] = array('start_timer'=>microtime(true), 'blocknum'=>$job['blocknum']);
+					$this->processingBlock[$job['blocknum']] = time();
 					unset($this->numSpawn[$runningPid]);
 				}
 			}
 			echo "\n";
 		} else {
 			echo "*";
-		}
-	}
-
-	private function notifyTelegramBot($lastBlocknumNotifyTelegram, $currentBlockHeight, $currentHeadBlockHeight) {
-		$currentHour = date("H");
-		if($this->enableTelegramBot && ($this->lastNotify === null || ($currentHour % self::NOTIFY_TELEGRAM_INTERVAL == 0 && $currentHour != $this->lastNotify))) {
-			if(file_exists($lastBlocknumNotifyTelegram)) {
-				$lastBlockProcess = file_get_contents($lastBlocknumNotifyTelegram);
-			} else {
-				$lastBlockProcess = $currentBlockHeight;
-			}
-			$data = array(
-				'Current Block:'=>number_format($currentBlockHeight),
-				'Last Irreversible Block:'=>number_format($currentHeadBlockHeight),
-				'Total Block Behind:'=>number_format($currentHeadBlockHeight - $currentBlockHeight),
-				'Processed Block:'=>$currentBlockHeight - $lastBlockProcess,
-				'chain'=>$this->chainName
-			);
-			file_put_contents($lastBlocknumNotifyTelegram, $currentBlockHeight);
-			$this->telegram->notifyStatus($data);
-			$this->lastNotify = $currentHour;
 		}
 	}
 } // End RunProcessBlocks class
