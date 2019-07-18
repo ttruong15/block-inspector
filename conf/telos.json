@@ -2,7 +2,7 @@
     "cleos": "/usr/bin/cleos",
     "wallet-url": "http://127.0.0.1:3001",
     "wallet-name": "default",
-    "wallet-password": "",
+    "wallet-password": "XXXX",
     "file-log-size-limit": "100",
     "enable-chain": ["eos","worbli"]
 }

@@ -8,6 +8,7 @@ $availableChains = getAvailableChains();
 $currentStat = getCurrentStat();
 $lastCheckStat = getLastStatCheck();
 
+logMessage("Start checking..");
 if(is_array($lastCheckStat) && count($lastCheckStat)) {
 	foreach($availableChains as $chainName) {
 		if($lastCheckStat[$chainName] == $currentStat[$chainName]) {
@@ -18,20 +19,25 @@ if(is_array($lastCheckStat) && count($lastCheckStat)) {
 			$data = array();
 			$data['text'] = $message;
 			$telegram->sendMessage($data);
+			logMessage("Send - " . $message);
 		}
 	}
 }
 file_put_contents(STAT_FILE, json_encode($currentStat));
+logMessage("Completed");
 
 function getCurrentStat() {
-	$files = scandir("logs");
+	$logDir = getLogDir();
+	$directories = scandir($logDir);
 	$lastStat = array();
-	foreach($files as $file) {
-		if(preg_match("/(.+)_current_blockheight.log$/", $file, $match)) {
-			$currentStats = json_decode(file_get_contents("logs/".$file), true);
-			$chain = $match[1];
-			foreach($currentStats as $blocknum=>$timer) {}
-			$lastStat[$chain] = $timer;
+	foreach($directories as $directory) {
+		if(is_dir($logDir."/".$directory)) {
+			$filename = $logDir."/".$directory."/current_blockheight.log";
+			if(file_exists($filename)) {
+				$currentStats = json_decode(file_get_contents($filename), true);
+				foreach($currentStats as $blocknum=>$timer) {}
+				$lastStat[$directory] = $timer;
+			}
 		}
 	}
 
@@ -39,12 +45,15 @@ function getCurrentStat() {
 }
 
 function getAvailableChains() {
-	$files = scandir("logs");
 	$chains = array();
-	$match = array();
-	foreach($files as $file) {
-		if(preg_match("/(.+)_current_blockheight.log$/", $file, $match)) {
-			$chains[] = $match[1];
+	$logDir = getLogDir();
+	$directories = scandir($logDir);
+	foreach($directories as $directory) {
+		if(is_dir($logDir."/".$directory)) {
+			$filename = $logDir."/".$directory."/current_blockheight.log";
+			if(file_exists($filename)) {
+				$chains[] = $directory;
+			}
 		}
 	}
 
@@ -59,6 +68,12 @@ function getLastStatCheck() {
 	return array();
 }
 
+function getLogDir() {
+	$logDir = __DIR__."/logs/";
+
+	return $logDir;
+}
+
 function calculateTime($lastCheckTimer) {
 	$duration = time() - $lastCheckTimer;
 
@@ -67,4 +82,8 @@ function calculateTime($lastCheckTimer) {
 	$seconds = $duration % 60;
 
 	return $hours.":".$minutes.":".$seconds;
+}
+
+function logMessage($message) {
+	echo date("Y-m-d H:i:s") . " - " . $message . "\n";
 }

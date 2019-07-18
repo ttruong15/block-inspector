@@ -374,12 +374,17 @@ class EosioChain {
         $logMessage = date("Y-m-d H:i:s", time()) . " - " . $message . "\n";
 
 		if($logDir === null) {
-			$logFile = dirname(__DIR__) . "/logs/".$this->currentChain . "_running.log";
+			$dir = dirname(__DIR__) . "/logs/".$this->currentChain;
+			if(!file_exists($dir)) {
+				mkdir($dir, 0777, true);
+			}
+
+			$logFile = $dir."/log_running.log";
 		} else {
 			if(substr($logDir, -1) == "/") {
-				$logFile = $logDir . $this->currentChain . "_running.log";
+				$logFile = $logDir . "log_running.log";
 			} else {
-				$logFile = $logDir . "/".$this->currentChain . "_running.log";
+				$logFile = $logDir . "/log_running.log";
 			}
 		}
 

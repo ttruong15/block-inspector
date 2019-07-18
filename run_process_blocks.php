@@ -38,8 +38,11 @@ class RunProcessBlocks {
 
 	public function __construct($chainName) {
 		$this->chainName = $chainName;
-		$this->logFilename = "logs/".$this->chainName."_process_block.log";
-		$this->currentBlockFile = "logs/".$this->chainName."_current_blockheight.log";
+		if(!file_exists("logs/".$this->chainName)) {
+			mkdir("logs/".$this->chainName, 0777);
+		}
+		$this->logFilename = "logs/".$this->chainName."/process_block.log";
+		$this->currentBlockFile = "logs/".$this->chainName."/current_blockheight.log";
 	}
 
 	public function run() {
