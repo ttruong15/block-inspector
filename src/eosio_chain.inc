@@ -261,12 +261,15 @@ class EosioChain {
 	 * @return array
 	 * @throws Exception
 	 */
-    public function runCommand($command, $expectedJsonReturn = true, $redirectErrorMessage = true) {
+    public function runCommand($command, $expectedJsonReturn = true, $redirectErrorMessage = true, $log=false) {
 		if($redirectErrorMessage) {
 			$command .= " 2>&1";
 		}
-// TODO
-$this->log($command);
+
+		if($log) {
+			$this->log($command);
+		}
+
         ob_start();
         @system($command, $retval);
         $resultString = ob_get_contents();

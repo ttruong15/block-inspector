@@ -30,7 +30,7 @@ class Action  {
 		$toAccountName = $action['data']['address_to'];
 		$command = $targetChainObj->buildCommandWithWallet('push action ednazztokens recvteleport \'{"from":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"}\' -p ednazzscotty');
 		if($targetChainObj->checkAndUnlockWallet()) {
-			$result = $targetChainObj->runCommand($command, false);
+			$result = $targetChainObj->runCommand($command, false, true, true);
 			$issueTransId = EosioChain::parseTransactionId($result);
 			if(!$issueTransId) {
 				$error = "Issue action failed: ";
