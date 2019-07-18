@@ -31,12 +31,17 @@ function getCurrentStat() {
 	$directories = scandir($logDir);
 	$lastStat = array();
 	foreach($directories as $directory) {
-		if(is_dir($logDir."/".$directory)) {
-			$filename = $logDir."/".$directory."/current_blockheight.log";
+		if($directory == "." || $directory == "..") {
+			continue;
+		}
+		if(is_dir($logDir.$directory)) {
+			$filename = $logDir.$directory."/current_blockheight.log";
 			if(file_exists($filename)) {
 				$currentStats = json_decode(file_get_contents($filename), true);
-				foreach($currentStats as $blocknum=>$timer) {}
-				$lastStat[$directory] = $timer;
+				if(is_array($currentStats)) {
+					foreach($currentStats as $timer) {}
+					$lastStat[$directory] = $timer;
+				}
 			}
 		}
 	}
@@ -49,8 +54,8 @@ function getAvailableChains() {
 	$logDir = getLogDir();
 	$directories = scandir($logDir);
 	foreach($directories as $directory) {
-		if(is_dir($logDir."/".$directory)) {
-			$filename = $logDir."/".$directory."/current_blockheight.log";
+		if(is_dir($logDir.$directory)) {
+			$filename = $logDir.$directory."/current_blockheight.log";
 			if(file_exists($filename)) {
 				$chains[] = $directory;
 			}
