@@ -60,7 +60,9 @@ class RunProcessBlocks {
 				try {
 					if(!$currentBlockHeight && file_exists($this->currentBlockFile)) {
 						$currentBlockHeights = json_decode(file_get_contents($this->currentBlockFile), true);
-						foreach($currentBlockHeights as $currentBlockHeight=>$lastRun) {}
+						if(is_array($currentBlockHeights) && count($currentBlockHeight)) {
+							foreach($currentBlockHeights as $currentBlockHeight=>$lastRun) {}
+						}
 						if(!$currentBlockHeight) {
 							$currentBlockHeight = $currentHeadBlockHeight;
 						}
