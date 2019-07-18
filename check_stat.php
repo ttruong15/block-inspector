@@ -11,7 +11,7 @@ $lastCheckStat = getLastStatCheck();
 logMessage("Start checking..");
 if(is_array($lastCheckStat) && count($lastCheckStat)) {
 	foreach($availableChains as $chainName) {
-		if($lastCheckStat[$chainName] == $currentStat[$chainName]) {
+		if(array_key_exists($chainName, $lastCheckStat) && array_key_exists($chainName, $currentStat) && $lastCheckStat[$chainName] == $currentStat[$chainName]) {
 			$message = date("jS F H:i:s e") . "\n\n";
 			$message .= "<b>".$chainName."</b>\n";
 			$message .= "<b>Last processed:</b> " . calculateTime($lastCheckStat[$chainName]) . " ago\n";
