@@ -5,21 +5,30 @@ require_once("src/transaction.inc");
 require_once("src/telegram.inc");
 
 if(count($argv) != 3) {
-	echo "Usage: php " . $argv[0] . " <chain> <blocknum>\n";
+	echo "Usage: php " . $argv[0] . " <chain> <blocknum> [enable_telegram_notification]\n";
 	echo "Example: \n";
 	echo "\tProcessing eos chain for block 1000000\n";
 	echo "\tphp " . $argv[0] . " eos 1000000\n";
+	echo "\n";
+	echo "Enable telegram notification\n";
+	echo "\tProcessing eos chain for block 1000000\n";
+	echo "\tphp " . $argv[0] . " eos 1000000 1\n";
 	exit;
 }
 
 $chain = $argv[1];
 $blockNum = $argv[2];
+$enableTelegramNotification = $argv[3] > 0 ? true : false;
 $eosioChain = new EosioChain($chain);
 $telegram = new Telegram();
 
 try {
 	$actions = $eosioChain->getActions($blockNum);
-	$actionObj = new Action($eosioChain);
+	$actionObj = new Action($eosioChain, $telegram);
+	if($enableTelegramNotification) {
+		$actionObj->setTelegram($telegram);
+	}
+
 	foreach($actions as $action) {
 		if(array_key_exists('account', $action)) {
 			if(preg_match("/^edna/", $action['account'])) {

@@ -3,7 +3,7 @@ require_once("src/eosio_chain.inc");
 require_once("src/telegram.inc");
 
 if(count($argv) < 2) {
-    echo "Usage: php {$argv[0]} <chain_name(eos|telos|worbli)>\n";
+    echo "Usage: php {$argv[0]} <chain_name(eos|telos|worbli)> [enableTelegram]\n";
     echo "\n";
     echo "Example:\n";
     echo "\n";
@@ -15,6 +15,10 @@ if(count($argv) < 2) {
     echo "\n";
     echo "\t Running WORBLI chain\n";
     echo "\t php {$argv[0]} worbli\n";
+    echo "\n";
+    echo "\n";
+    echo "\t Running WORBLI chain and Enable Telegram Notification\n";
+    echo "\t php {$argv[0]} worbli 1\n";
     echo "\n";
     exit;
 }
@@ -35,14 +39,26 @@ class RunProcessBlocks {
 	private $logFilename = null;
 	private $chainName = null;
 	private $processingBlock = array();
+	private $enableTelegramNotification = false;
+	const PHP_CMD = "/usr/bin/php";
+	const KILL_CMD = "/bin/kill";
 
-	public function __construct($chainName) {
+	public function __construct($chainName, $enableTelegram=false) {
+
+		if(!file_exists(self::PHP_CMD)) {
+			throw new Exception(self::PHP_CMD . " is missing");
+		}
+		if(!file_exists(self::KILL_CMD)) {
+			throw new Exception(self::KILL_CMD . " is missing");
+		}
+
 		$this->chainName = $chainName;
 		if(!file_exists("logs/".$this->chainName)) {
 			mkdir("logs/".$this->chainName, 0777);
 		}
 		$this->logFilename = "logs/".$this->chainName."/process_block.log";
 		$this->currentBlockFile = "logs/".$this->chainName."/current_blockheight.log";
+		$this->enableTelegramNotification = $enableTelegram;
 	}
 
 	public function run() {
@@ -74,7 +90,7 @@ class RunProcessBlocks {
 					if(count($this->numSpawn) <= self::MAX_SPAWN) {
 						if($currentBlockHeight < $currentHeadBlockHeight) {
 							// log block start processing
-							$command = "/usr/bin/nohup ./process_block.php {$this->chainName} $currentBlockHeight >> {$this->logFilename} 2>&1 & echo $!";
+							$command = self::PHP_CMD . " process_block.php {$this->chainName} $currentBlockHeight {$this->enableTelegramNotification} >> {$this->logFilename} 2>&1 & echo $!";
 							$childPid = exec($command);
 							$this->numSpawn[$childPid] = array('start_timer'=>microtime(true), 'blocknum'=>$currentBlockHeight);
 							$currentBlockHeight += 1;
@@ -125,14 +141,14 @@ class RunProcessBlocks {
 				$duration = microtime(true) - $job['start_timer'];
 				if($duration > self::MAX_TIME_ALLOW) {
 					echo "Failed block: " . $job['blocknum'] . "\n";
-					$command = "/bin/kill -9 ".$runningPid;
+					$command = self::KILL_CMD . " ".$runningPid;
+					unset($this->numSpawn[$runningPid]);
 					exec($command);
 
-					$command = "/usr/bin/nohup ./process_block.php.php {$this->chainName} ".$job['blocknum']." >> {$this->logFilename} 2>&1 & echo $!";
+					$command = self::PHP_CMD . " process_block.php {$this->chainName} $currentBlockHeight {$this->enableTelegramNotification} >> {$this->logFilename} 2>&1 & echo $!";
 					$childPid = exec($command);
 					$this->numSpawn[$childPid] = array('start_timer'=>microtime(true), 'blocknum'=>$job['blocknum']);
 					$this->processingBlock[$job['blocknum']] = time();
-					unset($this->numSpawn[$runningPid]);
 				}
 			}
 			echo "\n";

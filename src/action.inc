@@ -16,8 +16,14 @@ define("WORBLI", 3);
 
 class Action  {
 	private $currentChain = null;
+	private $telegram = null;
+
 	public function __construct(EosioChain $currentChain) {
 		$this->currentChain = $currentChain;
+	}
+
+	public function setTelegram(Telegram $telegram) {
+		$this->telegram = $telegram;
 	}
 
 	public function processTeleport($action) {
@@ -28,6 +34,11 @@ class Action  {
 		$quantity = $action['data']['quantity'];
 		$memo = $action['data']['memo'];
 		$toAccountName = $action['data']['address_to'];
+
+		if($targetChainName == "worbli") {
+			list($qty, $token) = explode(" ", $quantity);
+			$quantity = $qty."0 ". $token;
+		}
 		$command = $targetChainObj->buildCommandWithWallet('push action ednazztokens recvteleport \'{"from":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"}\' -p ednazzscotty');
 		if($targetChainObj->checkAndUnlockWallet()) {
 			$result = $targetChainObj->runCommand($command, false, true, true);
@@ -44,6 +55,12 @@ class Action  {
 				throw new Exception($error);
 			} else {
 				$targetChainObj->log("Issue successfully with transaction id: " . $issueTransId);
+				if(is_object($this->telegram) && $this->telegram instanceof Telegram) {
+					$message = date("jS F H:i:s e") . "\n\n";
+					$message .= "Issue successfully with transaction id: $issueTransId\n\n";
+					$message .= "$command\n";
+					$this->telegram->sendMessage(array('text'=>$message));
+				}
 			}
 		} else {
 			$this->currentChain->log("Error: unable to unlock '$targetChainName' wallet");
