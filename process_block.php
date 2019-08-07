@@ -4,7 +4,7 @@ require_once("src/action.inc");
 require_once("src/transaction.inc");
 require_once("src/telegram.inc");
 
-if(count($argv) != 3) {
+if(count($argv) < 3) {
 	echo "Usage: php " . $argv[0] . " <chain> <blocknum> [enable_telegram_notification]\n";
 	echo "Example: \n";
 	echo "\tProcessing eos chain for block 1000000\n";
