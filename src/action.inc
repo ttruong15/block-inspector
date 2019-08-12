@@ -35,10 +35,6 @@ class Action  {
 		$memo = $action['data']['memo'];
 		$toAccountName = $action['data']['address_to'];
 
-		if($targetChainName == "worbli") {
-			list($qty, $token) = explode(" ", $quantity);
-			$quantity = $qty."0 ". $token;
-		}
 		$command = $targetChainObj->buildCommandWithWallet('push action ednazztokens recvteleport \'{"from":"'.$fromAccountName.'","quantity":"'.$quantity.'","memo":"'.$memo.'","target_chain":"'. $targetChain . '","address_to":"'.$toAccountName.'"}\' -p ednazzscotty');
 		if($targetChainObj->checkAndUnlockWallet()) {
 			$result = $targetChainObj->runCommand($command, false, true, true);
