@@ -50,7 +50,7 @@ class Action  {
 				} else {
 					$error .= $result . "\n";
 				}
-				$error .= json_encode($action['data']);
+				$error .= $command . "\n";
 				$targetChainObj->log($error);
 				throw new Exception($error);
 			} else {
