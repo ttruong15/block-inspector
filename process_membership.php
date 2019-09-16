@@ -101,32 +101,43 @@ foreach($datas as $data) {
 		$command = $eosioChain->buildCommandWithWallet('push action ednazztokens addnewmember \'{"member_id":"'.$userId.'","home_chain":"'.$homeChainId.'","account":"'.$accountName.'","referred_by_id":"'. $referredBy . '","is_researcher":"'.$isResearcher.'", "is_councilor":"'.$isCouncilor.'"}\' -p ednazzscotty');
 
 		if($eosioChain->checkAndUnlockWallet()) {
-			$result = $eosioChain->runCommand($command, false, true, true);
-			$issueTransId = EosioChain::parseTransactionId($result);
-			if(!$issueTransId) {
-				$error = "Issue action failed: ";
-				if(is_array($result)) {
-					$error .= json_encode($result) . "\n";
-				} else {
-					$error .= $result . "\n";
-				}
-				$error .= $command . "\n";
-				echo $error . "\n";
+			$retryCount = 0;
+			while(true) {
+				$result = $eosioChain->runCommand($command, false, true, true);
+				$issueTransId = EosioChain::parseTransactionId($result);
+				if(!$issueTransId) {
+					$error = "Issue action failed: ";
+					if(is_array($result)) {
+						$error .= json_encode($result) . "\n";
+					} else {
+						$error .= $result . "\n";
+					}
+					$error .= $command . "\n";
 
-				$eosioChain->log($error);
-				$message = date("jS F H:i:s e") . "\n\n";
-				$message .= $error;
-				$telegram->sendMessage(array('text'=>$message));
-			} else {
-				$eosioChain->log("Issue successfully with transaction id: " . $issueTransId);
-				if(is_object($telegram) && $telegram instanceof Telegram) {
+					if(preg_match("/3080006: Transaction took too long/", $error)) {
+						if($retryCount <= 3) {
+							continue;
+						}
+						$retryCount++;
+					}
+					echo $error . "\n";
+
+					$eosioChain->log($error);
 					$message = date("jS F H:i:s e") . "\n\n";
-					$message .= "Issue successfully with transaction id: $issueTransId\n\n";
-					$message .= "$command\n";
-
-					echo $message . "\n";
+					$message .= $error;
 					$telegram->sendMessage(array('text'=>$message));
+				} else {
+					$eosioChain->log("Issue successfully with transaction id: " . $issueTransId);
+					if(is_object($telegram) && $telegram instanceof Telegram) {
+						$message = date("jS F H:i:s e") . "\n\n";
+						$message .= "Issue successfully with transaction id: $issueTransId\n\n";
+						$message .= "$command\n";
+
+						echo $message . "\n";
+						$telegram->sendMessage(array('text'=>$message));
+					}
 				}
+				break; // transaction completed, exit loop
 			}
 		} else {
 			$eosioChain->log("Error: unable to unlock wallet");
