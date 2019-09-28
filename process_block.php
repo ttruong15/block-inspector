@@ -18,7 +18,7 @@ if(count($argv) < 3) {
 
 $chain = $argv[1];
 $blockNum = $argv[2];
-$enableTelegramNotification = $argv[3] > 0 ? true : false;
+$enableTelegramNotification = (isset($argv[3]) && $argv[3] > 0) ? true : false;
 $eosioChain = new EosioChain($chain);
 $telegram = new Telegram();
 
@@ -43,6 +43,7 @@ try {
 	}
 } catch(Exception $e) {
 	$message = date("jS F H:i:s e") . "\n\n";
+	$message = "blocknum: " . $blockNum . "\n\n";
 	$message .= $e->getMessage();
 	$telegram->sendMessage(array('text'=>$message));
 }

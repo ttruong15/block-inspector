@@ -60,7 +60,7 @@ class Action  {
 			}
 		} else {
 			$this->currentChain->log("Error: unable to unlock '$targetChainName' wallet");
-			throw new Exception("Error: unable to unlock '$targetChainName' wallet");
+			throw new Exception("Error: unable to unlock '$targetChainName' wallet\n\n" . $command);
 		}
 	}
 
