@@ -138,6 +138,7 @@ class RunProcessBlocks {
 			echo "Queue blocknum: ";
 			foreach($this->numSpawn as $runningPid=>$job) {
 				echo $job['blocknum'] . " ";
+				$currentBlockHeight = $job['blocknum'];
 				$duration = microtime(true) - $job['start_timer'];
 				if($duration > self::MAX_TIME_ALLOW) {
 					echo "Failed block: " . $job['blocknum'] . "\n";
