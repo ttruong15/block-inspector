@@ -296,7 +296,7 @@ class EosioChain {
 	 * @throws exception
 	 */
     public function getConfigOptions() {
-		$configFile = "conf/".$this->currentChain.".json";
+		$configFile = dirname(__DIR__) . "/conf/".$this->currentChain.".json";
 		if(!file_exists($configFile)) {
 			throw new Exception("Missing " . $configFile . " file.");
 		}
@@ -347,7 +347,7 @@ class EosioChain {
 	 * @throws Exception
 	 */
 	public function getAvailableNodes() {
-		$avalableNodeConfigFile = "conf/".$this->currentChain."_node_available.json";
+		$avalableNodeConfigFile = dirname(__DIR__)."/conf/".$this->currentChain."_node_available.json";
 		if(!file_exists($avalableNodeConfigFile)) {
 			throw new Exception("Missing " . $avalableNodeConfigFile . " file.");
 		}

@@ -19,8 +19,11 @@ class Telegram {
     private $botChatId = null;
     private $channelName = null;
 
+	private $configFile = null;
+
     public function __construct() {
         try {
+			$this->configFile = dirname(__DIR__) ."/conf/telegram.json";
             $this->readConfig();
             $this->setURL($this->URL . $this->botKey);
         } catch(Exception $e) {
@@ -159,11 +162,11 @@ class Telegram {
     }
 
     private function readConfig() {
-        if(!file_exists("conf/telegram.json")) {
-            throw new Exception("conf/telegram.json is not available");
+        if(!file_exists($this->configFile)) {
+            throw new Exception($this->configFile. " is not available");
         }
 
-        $config = json_decode(file_get_contents("conf/telegram.json"), true);
+        $config = json_decode(file_get_contents($this->configFile), true);
         if(json_last_error()) {
             throw new Exception("ERROR: reading telegram.json - " . json_last_error_msg());
         }
