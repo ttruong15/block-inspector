@@ -42,6 +42,36 @@ if(!file_exists($logFile)) {
 		$message .= "<b>$chainName</b> node stop sync at " . $currentNodeStat['head_block_num']."\n\n";
 		$telegram->sendMessage(array('text'=>$message));
 		echo date("Y-m-d H:i:s") . " - Failed\n";
+
+		if($chainName == "worbli") {
+			exec("/home/tinh/bin/stop-worbli");
+			sleep(5);
+			exec("/home/tinh/bin/start-worbli");
+
+			if(file_exists("/opt/1.8/worbli/data/nodeos.pid")) {
+				$pid = file_get_contents("/opt/1.8/worbli/data/nodeos.pid");
+				$result = exec("/bin/ps aux |/bin/grep nodeos |/usr/bin/awk '{print $2}' |/bin/grep " . $pid);
+				if($result == $pid) {
+					$message = date("jS F H:i:s e") . "\n\n";
+					$message .= "Successfully auto restart node: <b>$chainName</b>\n\n";
+					$telegram->sendMessage(array('text'=>$message));
+				}
+			}
+		} else {
+			exec("/home/tinh/bin/stop-eosio " . $chainName);
+			sleep(5);
+			exec("/home/tinh/bin/start-eosio " . $chainName);
+
+			if(file_exists("/opt/".$chainName."/data/nodeos.pid")) {
+				$pid = file_get_contents("/opt/".$chainName."/data/nodeos.pid");
+				$result = exec("/bin/ps aux |/bin/grep nodeos |/usr/bin/awk '{print $2}' |/bin/grep " . $pid);
+				if($result == $pid) {
+					$message = date("jS F H:i:s e") . "\n\n";
+					$message .= "Successfully auto restart node: <b>$chainName</b>\n\n";
+					$telegram->sendMessage(array('text'=>$message));
+				}
+			}
+		}
 	} else {
 		file_put_contents($logFile, json_encode($currentNodeStat));
 		echo date("Y-m-d H:i:s") . " - OK\n";
