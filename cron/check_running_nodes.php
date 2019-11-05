@@ -4,8 +4,8 @@
  * When a node is running smoothly we expecting the head_block_num to increase.  If we detect this
  * number doesn't change we send a telegram message.
  */
-require_once("../src/eosio_chain.inc");
-require_once("../src/telegram.inc");
+require_once(dirname(__DIR__)."/src/eosio_chain.inc");
+require_once(dirname(__DIR__)."/src/telegram.inc");
 
 if(count($argv) < 2) {
     echo "Usage: php {$argv[0]} <chain_name(eos|telos|worbli)>\n";
